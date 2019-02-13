@@ -2,7 +2,7 @@
   <div id="app">
     <div class="container">
       <h1 align="center">Vue-APlayer</h1>
-      <p align="center">
+      <!-- <p align="center">
         <img :src="`https://img.shields.io/badge/DEMO-v${version}-41b883.svg?style=flat-square`"/>
         <a href="https://www.npmjs.com/package/vue-aplayer"><img
           src="https://img.shields.io/npm/v/vue-aplayer.svg?style=flat-square"/></a>
@@ -18,7 +18,7 @@
         </a>
         <a href="https://github.com/SevenOutman/vue-aplayer/blob/master/LICENSE"><img
           src="https://img.shields.io/npm/l/vue-aplayer.svg?style=flat-square"/></a>
-      </p>
+      </p> -->
       <h3>Basic (zero config)</h3>
       <aplayer
         :music="{
@@ -41,7 +41,7 @@
         :music='list3[0]'
         :list='list3'
       />
-      <ul style="text-align: start">
+      <!-- <ul style="text-align: start">
         <li>Playlist</li>
         <li>Lyrics scroll</li>
         <li>Per-song theme & self-adapting theme</li>
@@ -70,7 +70,7 @@
       <footer align="center">
         <p>Thank <a href="https://github.com/DIYgod" target="_blank">@DIYgod</a> and <a
           href="https://github.com/MoePlayer/APlayer" target="_blank">APlayer</a> for hosting demo resources</p>
-      </footer>
+      </footer> -->
     </div>
   </div>
 </template>
