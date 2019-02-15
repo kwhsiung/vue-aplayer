@@ -65,20 +65,35 @@
   import Controls from './components/aplayer-controller.vue'
   import Lyrics from './components/aplayer-lrc.vue'
   import { deprecatedProp, versionCompare, warn } from './utils'
+  const debug = require('debug')('VUE:vue-aplayer.vue')
 
+  // NOTE: done
+  // 瀏覽器 console log 絢麗的版本提示顯示過了沒
   let versionBadgePrinted = false
+
+  // NOTE: done
+  // 版本檢查器
   const canUseSync = versionCompare(Vue.version, '2.3.0') >= 0
 
+  // NOTE: done
+  // cache color-thief.js 抓來的顏色資料
   /**
    * memorize self-adapting theme for cover image urls
    * @type {Object.<url, rgb()>}
    */
   const picThemeCache = {}
 
+  // NOTE: mutual exclusion
+  // 作用: Pause other players when this player is playing
+  /* 原理: vue component 其實是透過 export default export 出去的 module
+  **      所以此 module 內的 global variable 會共用
+  **      利用這個特性，我們可以讓所有 imported components 共享變數
+  */
   // mutex playing instance
   let activeMutex = null
 
-
+  // TODO: 一隻半解
+  // 存放 mappings 的地方
   const REPEAT = {
     NONE: 'none',
     MUSIC: 'music',
@@ -90,6 +105,9 @@
 
   const VueAPlayer = {
     name: 'APlayer',
+
+    // NOTE: done
+    // 控制瀏覽器 console log 絢麗的版本提示的開關
     disableVersionBadge: false,
     components: {
       Thumbnail,
@@ -98,6 +116,10 @@
       Lyrics,
     },
     props: {
+      // Props
+      // https://github.com/SevenOutman/vue-aplayer/blob/develop/docs/README.md#props
+
+      // Music info for current playing music, see Music info
       music: {
         type: Object,
         required: true,
@@ -111,30 +133,43 @@
           return song.src || song.url
         },
       },
+
+      // Music list to play and display. If list is not empty, music list panel will be shown, even if the only song in the list is identical to music prop.
       list: {
         type: Array,
         default () {
           return []
         },
       },
+
+      // Mini mode
       mini: {
         type: Boolean,
         default: false,
       },
+
+      // Whether to show lyrics or not
       showLrc: {
         type: Boolean,
         default: false,
       },
+
+      // Pause other players when this player is playing
       mutex: {
         type: Boolean,
         default: true,
       },
+
+      // Theme color, will be overridden by current music's theme if set
       theme: {
         type: String,
         default: '#41b883',
       },
 
+      // Max height of play list
       listMaxHeight: String,
+
+      // Fold playlist initially
       /**
        * @since 1.4.1
        * Fold playlist initially
@@ -144,6 +179,7 @@
         default: false,
       },
 
+      // Float mode, in which you can drag the player around and leave it anywhere on your page
       /**
        * @since 1.2.0 Float mode
        */
@@ -156,7 +192,9 @@
       // since 1.4.0
       // autoplay controls muted preload volume
       // autoplay is not observable
+      // https://github.com/SevenOutman/vue-aplayer/blob/develop/docs/README.md#audio-attributes-as-props
 
+      // Starts playing as soon as loaded. If more than one mutex player are set autoplay, only the first one will play.
       /**
        * @since 1.4.0
        * not observable
@@ -166,6 +204,7 @@
         default: false,
       },
 
+      // Shows native audio controls below the player, or between player and playlist. This only works in develop environment, and doesn't work in Mini mode.
       /**
        * @since 1.4.0
        * whether to show native audio controls below Vue-APlayer
@@ -178,6 +217,7 @@
         default: false,
       },
 
+      // Player is muted.
       /**
        * @since 1.4.0
        * observable, sync
@@ -186,12 +226,15 @@
         type: Boolean,
         default: false,
       },
+
+      // The way to load music, can be 'none' 'metadata' or 'auto'
       /**
        * @since 1.4.0
        * observable
        */
       preload: String,
 
+      // Playback volume.
       /**
        * @since 1.4.0
        * observable, sync
@@ -589,9 +632,12 @@
       // playlist
 
       getShuffledList () {
+        // 只有一首，那就是只有一首
         if (!this.list.length) {
           return [this.internalMusic]
         }
+
+        // clone 一個新的 list 叫做 unshuffled
         let unshuffled = [...this.list]
         if (!this.internalShuffle || unshuffled.length <= 1) {
           return unshuffled
@@ -674,14 +720,30 @@
         this.audioVolume = this.audio.volume
         this.isAudioMuted = this.audio.muted
       },
+      // TODO: fuguring out: 一知半解
+      // 當某首音檔播放完後觸發的事件
       onAudioEnded () {
+
         // determine next song according to shuffle and repeat
+        debug('onAudioEnded')
+        // 全部循環模式
         if (this.repeatMode === REPEAT.REPEAT_ALL) {
+          debug('this.shouldShuffle:', this.shouldShuffle)
+          debug('this.playIndex:', this.playIndex)
+          debug('this.shuffledList.length:', this.shuffledList.length)
+          debug('this.playIndex === this.shuffledList.length - 1', this.playIndex === this.shuffledList.length - 1)
+          
+          // 如果目前是「隨機播放」模式
+          // 當某首音檔播放完後，判斷這首音檔是否已經是隨機播放列表的最後一首
+          // 如果是，則重新計算 shuffledList
+          // 然後再次播放
           if (this.shouldShuffle && this.playIndex === this.shuffledList.length - 1) {
             this.shuffledList = this.getShuffledList()
           }
           this.playIndex++
           this.thenPlay()
+
+        // 單曲循環模式，直接播放原曲
         } else if (this.repeatMode === REPEAT.REPEAT_ONE) {
           this.thenPlay()
         } else {
@@ -845,21 +907,35 @@
         this.internalRepeat = val
       },
     },
+    // NOTE: figuring out: done
     beforeCreate () {
+      // 瀏覽器 console log 絢麗的版本提示
       if (!VueAPlayer.disableVersionBadge && !versionBadgePrinted) {
         // version badge
         console.log(`\n\n %c Vue-APlayer ${VERSION} %c vue-aplayer.js.org \n`, 'color: #fff; background:#41b883; padding:5px 0;', 'color: #fff; background: #35495e; padding:5px 0;')
         versionBadgePrinted = true
       }
     },
+    // TODO: fuguring out: 一知半解，skipped
     created () {
+      // shuffled: 下一首歌隨機播放
+      // 得到一個隨機打散的 playlist
       this.shuffledList = this.getShuffledList()
     },
+    // NOTE: figuring out: done
     mounted () {
+      // init eventEmitters and eventHandlers
       this.initAudio()
+
+      // 可透過 color-thief.js 來取得單曲封面的主題色
       this.setSelfAdaptingTheme()
+
+
       if (this.autoplay) this.play()
     },
+    // NOTE: fuguring out: done
+    // 將目前的 player instance 從 activeMutex 解除
+    // 將 hls lib 銷毀
     beforeDestroy () {
       if (activeMutex === this) {
         activeMutex = null
