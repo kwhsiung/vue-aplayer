@@ -326,7 +326,9 @@
     },
     data () {
       return {
+        // NOTE: internal storage of music
         internalMusic: this.music,
+
         isPlaying: false,
         isSeeking: false,
         wasPlayingBeforeSeeking: false,
@@ -375,11 +377,14 @@
       }
     },
     computed: {
+      // NOTE: done
       // alias for $refs.audio
       audio () {
         return this.$refs.audio
       },
 
+      // NOTE: done
+      // interface of music
       // sync music
       currentMusic: {
         get () {
@@ -390,6 +395,8 @@
           this.internalMusic = val
         },
       },
+
+      // NOTE: done
       // compatible for deprecated props
       isMiniMode () {
         return this.mini || this.narrow
@@ -456,9 +463,10 @@
         return this.repeatMode !== REPEAT.NO_REPEAT
       },
 
+      // NOTE: done
+      // interfaces
       // since 1.4.0
       // sync muted, volume
-
       isAudioMuted: {
         get () {
           return this.internalMuted
@@ -834,6 +842,7 @@
       },
     },
     watch: {
+      // NOTE: sync internal with props
       music (music) {
         this.internalMusic = music
       },
@@ -889,8 +898,8 @@
         this.audio.volume = val
       },
 
+      // NOTE: sync internal with props
       // sync muted, volume
-
       muted (val) {
         this.internalMuted = val
       },
@@ -898,7 +907,7 @@
         this.internalVolume = val
       },
 
-
+      // NOTE: sync internal with props
       // sync shuffle, repeat
       shuffle (val) {
         this.internalShuffle = val
