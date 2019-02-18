@@ -453,9 +453,11 @@
       },
       playIndex: {
         get () {
+          // TODO: 為什麼找 object 可以用 indexOf?
           return this.shuffledList.indexOf(this.currentMusic)
         },
         set (val) {
+          // NOTE: 取餘數的用意在於數字循環（但只有單向遞增適用，反向遞減需考慮負數）
           this.currentMusic = this.shuffledList[val % this.shuffledList.length]
         },
       },
